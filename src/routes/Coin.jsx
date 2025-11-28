@@ -1,175 +1,165 @@
+import {Route, Routes, useParams} from 'react-router';
+import {Link} from 'react-router-dom';
 import {useEffect, useState} from 'react';
-import {Link, useParams} from 'react-router-dom';
-import styled, {createGlobalStyle} from 'styled-components';
+import styled from 'styled-components';
+import Price from './Price';
 
-// 전역 스타일을 함수 외부로
-const GlobalStyle = createGlobalStyle`
-    body {
-        background-color: #000000;
-        margin: 0;
-        padding: 0;
-    }
-`;
-
-// 모든 styled 컴포넌트를 함수 외부로 이동
 const Container = styled.div`
+    padding: 0 20px;
     margin: 0 auto;
-    width: 100%;
-    max-width: 600px;
-    padding: 20px;
-    min-height: 100vh;
-`;
-
-const BackButton = styled(Link)`
-    display: inline-block;
-    padding: 10px 20px;
-    background-color: #aa3388;
-    color: white;
-    text-decoration: none;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    transition: all 0.3s;
-
-    &:hover {
-        background-color: #882266;
-        transform: scale(1.05);
-    }
-`;
-
-const CoinCard = styled.div`
-    background: white;
-    border-radius: 20px;
-    padding: 40px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    animation: slideUp 0.6s ease-out;
-
-    @keyframes slideUp {
-        0% {
-            transform: translateY(50px);
-            opacity: 0;
-        }
-        100% {
-            transform: translateY(0);
-            opacity: 1;
-        }
-    }
-`;
-
-const CoinImage = styled.img`
-    width: 120px;
-    height: 120px;
-    display: block;
-    margin: 0 auto 30px;
-    animation: rotate 3s ease-in-out infinite;
-
-    @keyframes rotate {
-        0%, 100% {
-            transform: rotate(0deg) scale(1);
-        }
-        50% {
-            transform: rotate(360deg) scale(1.1);
-        }
-    }
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
 `;
 
 const Title = styled.h1`
-    font-size: 36px;
-    color: #aa3388;
+    font-size: 48px;
+    color: #3355aa;
+    text-transform: uppercase;
     text-align: center;
-    margin-bottom: 20px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    font-weight: 900;
 `;
 
-const InfoBox = styled.div`
-    background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 15px;
-    padding: 20px;
-    margin: 15px 0;
-    border-left: 5px solid #aa3388;
-    transition: all 0.3s;
+const Loader = styled.span`
+    text-align: center;
+    display: block;
+`;
 
-    &:hover {
-        transform: translateX(10px);
-        box-shadow: 0 5px 15px rgba(170, 51, 136, 0.3);
+const Overview = styled.div`
+    display: flex;
+    justify-content: space-between;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.1);
+`;
+
+const OverviewBox = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    // &:first-child -> 어떠한 태그인지는 모르겠지만, 첫 번째 자식에게 CSS 적용
+    // div:first-child -> div 태그 첫번째 자식에게 CSS 적용
+
+    div:first-child {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+    }
+
+    // div:last-child -> div 태그 마지막 자식에게 CSS 적용
+
+    div:last-child {
+        text-transform: uppercase;
     }
 `;
 
-const Label = styled.span`
-    font-weight: bold;
-    color: #aa3388;
-    font-size: 18px;
+// 짝수(홀수-odd)번째 자식에게 태그 적용
+// &:nth-child(even){}
+
+const Description = styled.div`
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 15px;
+    padding: 30px;
+    line-height: 1.5;
+    font-size: 14px;
 `;
 
-const Value = styled.span`
-    color: #333;
-    font-size: 18px;
-    margin-left: 10px;
+const Tabs = styled.div`
+    display: flex;
+    justify-content: space-between;
+    gap: 4%;
 `;
 
-const Loader = styled.div`
+const Tab = styled(Link)`
+    width: 48%;
+    padding: 20px;
     text-align: center;
-    font-size: 24px;
-    color: #ffffff;
-    padding-top: 50px;
+    border-radius: 10px;
+    background-color: #aaa;
+    text-decoration: none;
+    color: inherit;
 `;
 
 function Coin() {
-    const [loading, setLoading] = useState(true);
-    const [coin, setCoin] = useState(null);
+    // 1. loading 대한 state
+    // 2. API에서 데이터를 받아옴
+    // 3. 받아온 데이터를 저장할 coin state
+
+    // 받아와야 하는 API 주소 : https://api.coingecko.com/api/v3/coins/${id}
+    // fetch 할 때 headers에 "x-cg-demo-api-key": "CG-MDneMBZNacbsPHWDSnvpJUHB"
+
     const {id} = useParams();
-    const exchangeRate = 1460;
+    const [loading, setLoading] = useState(true);
+    const [coin, setCoin] = useState({});
 
     useEffect(() => {
         fetch(`https://api.coingecko.com/api/v3/coins/${id}`, {
             headers: {
                 'x-cg-demo-api-key': 'CG-MDneMBZNacbsPHWDSnvpJUHB',
             },
-        }).then(res => res.json()).then(data => {
+        })
+        .then((response) => response.json())
+        .then((data) => {
             setCoin(data);
             setLoading(false);
         });
     }, [id]);
 
     return (
-            <>
-                <GlobalStyle/>
-                <Container>
-                    {loading ? (
-                            <Loader>Loading...</Loader>
-                    ) : (
-                            <>
-                                <BackButton to="/">← 뒤로 가기</BackButton>
-                                <CoinCard>
-                                    <CoinImage src={coin?.image?.large}
-                                               alt={coin?.name}/>
-                                    <Title>{coin?.name}</Title>
-
-                                    <InfoBox>
-                                        <Label>약칭:</Label>
-                                        <Value>{coin?.symbol?.toUpperCase()}</Value>
-                                    </InfoBox>
-
-                                    <InfoBox>
-                                        <Label>현재 가격:</Label>
-                                        <Value>${coin?.market_data?.current_price?.usd?.toLocaleString()}</Value>
-                                    </InfoBox>
-
-                                    <InfoBox>
-                                        <Label>한화 가격:</Label>
-                                        <Value>
-                                            {coin?.market_data?.current_price?.usd &&
-                                            exchangeRate
-                                                    ? (coin.market_data.current_price.usd *
-                                                            exchangeRate).toLocaleString()
-                                                    : '-'}
-                                            원
-                                        </Value>
-                                    </InfoBox>
-                                </CoinCard>
-                            </>
-                    )}
-                </Container>
-            </>
+            <Container>
+                {/* 논리합 || : 좌측의 값이 true이면 왼쪽을 출력, 값이 없거나 false라면 오른쪽을 출력 */}
+                <Title>{id || 'Loading...'}</Title>
+                {loading ? (
+                        <Loader>Loading...</Loader>
+                ) : (
+                        <>
+                            <Overview>
+                                <OverviewBox>
+                                    <div>HASHING</div>
+                                    <div>{coin?.hashing_algorithm}</div>
+                                </OverviewBox>
+                                <OverviewBox>
+                                    <div>SYMBOL</div>
+                                    <div>{coin?.symbol}</div>
+                                </OverviewBox>
+                                <OverviewBox>
+                                    <div>Genesis Date</div>
+                                    <div>{coin?.genesis_date}</div>
+                                </OverviewBox>
+                            </Overview>
+                            <Description>{coin?.description?.en}</Description>
+                            <Overview>
+                                <OverviewBox>
+                                    <div>Total Supply</div>
+                                    <div>{coin?.market_data?.total_supply}</div>
+                                </OverviewBox>
+                                <OverviewBox>
+                                    <div>High Price</div>
+                                    <div>{coin?.market_data?.high_24h?.usd}</div>
+                                </OverviewBox>
+                                <OverviewBox>
+                                    <div>Low Price</div>
+                                    <div>{coin?.market_data?.low_24h?.usd}</div>
+                                </OverviewBox>
+                                <OverviewBox>
+                                    <div>Current Price</div>
+                                    <div>{coin?.market_data?.current_price?.usd}</div>
+                                </OverviewBox>
+                            </Overview>
+                            <Tabs>
+                                {/*<Tab to={`/coin/${id}/chart`}>Chart</Tab>*/}
+                                <Tab to={`/coin/${id}/price`}>Price</Tab>
+                            </Tabs>
+                            <Routes>
+                                {/*<Route path={"/chart"} element={<Chart />} />*/}
+                                <Route path={"/price"} element={<Price coin={coin} />} />
+                            </Routes>
+                        </>
+                )}
+            </Container>
     );
 }
 
